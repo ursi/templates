@@ -1,0 +1,8 @@
+!npm i -D
+@babel/core
+@babel/preset-env
+electron
+gulp
+gulp-babel
+gulp-pug
+gulp-pug-client
