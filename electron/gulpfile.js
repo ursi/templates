@@ -1,7 +1,7 @@
 const
-	gulpPugClient = require(`gulp-pug-client`),
-	gulpPug = require(`gulp-pug`),
 	gulpBabel = require(`gulp-babel`),
+	gulpElm = require(`gulp-elm`),
+	gulpRename = require(`gulp-rename`),
 	{
 		src,
 		dest,
@@ -9,43 +9,51 @@ const
 		parallel,
 		watch,
 	} = require(`gulp`),
-	path = require(`path`),
-	{Transform} = require(`stream`),
 	input = `src/`,
 	output = `dist/`,
-	copyGlobs = [
-		`**/*.js`,
-		`**/*.css`,
-		`**/*.json`,
-		`**/*.png`,
-	].map(g => input + g)
-		.concat([`!${input}win/modules/**/*.js`]);
+	globs = {};
+
+globs.copy = [input + `**`, ...[
+	`win/web-modules/**`,
+	`**/*.elm`,
+	`win/elm-stuff/**`,
+	`win/src/**`,
+	`win/elm.json`,
+	`win/elm-git.json`,
+].map(g => `!` + input + g)];
 
 function copy() {
-	return src(copyGlobs)
+	return src(globs.copy)
 		.pipe(dest(output));
 }
 
-function pugClient() {
-	return src(input + `win/pug-client/*.pug`)
-		.pipe(gulpPugClient())
-		.pipe(dest(output + `win/pug-client`));
-}
-
-function pug() {
-	return src(input + `win/*.pug`)
-		.pipe(gulpPug())
+globs.elm = input + `win/src/Main.elm`;
+function elm() {
+	return src(globs.elm)
+		.pipe(gulpElm({cwd: input + `win`}))
+		.pipe(gulpRename(`elm.js`))
 		.pipe(dest(output + `win`));
 }
 
+globs.babel = input + `win/web-modules/**/*.js`;
 function babel() {
-	return src(input + `win/modules/**/*.js`)
+	return src(globs.babel)
 		.pipe(gulpBabel({plugins: [`@babel/plugin-transform-modules-commonjs`]}))
-		.pipe(dest(output + `win/modules`));
+		.pipe(dest(output + `win/web-modules`));
 }
 
-exports.default = parallel(copy, pug, pugClient, babel);
-watch(copyGlobs, copy);
-watch(input + `win/*.pug`, pug);
-watch(input + `win/pug-client/*.pug`, pugClient);
-watch(input + `win/modules/**/*.js`, babel);
+const build =
+	parallel
+		( copy
+		, elm
+		, babel
+		);
+
+async function watchFiles() {
+	const cry = {usePolling: true};
+	watch(globs.copy, cry, copy);
+	watch(input + `win/src/**/*.elm`, cry, elm);
+	watch(globs.babel, babel);
+}
+
+exports.default = parallel(build, watchFiles);
