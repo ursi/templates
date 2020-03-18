@@ -1,5 +1,6 @@
 {
   "scripts": {
+	"start": "electron dist",
     "build": "electron-packager dist --overwrite"
   }
 }

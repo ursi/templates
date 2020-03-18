@@ -1,6 +1,0 @@
-{
-  "main": "app.js",
-  "scripts": {
-    "start": "electron ."
-  }
-}
