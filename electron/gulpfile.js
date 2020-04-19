@@ -35,7 +35,11 @@ function elm() {
 		.pipe(dest(output + `win`));
 }
 
-globs.babel = input + `win/web-modules/**/*.js`;
+globs.babel = [
+	input + `win/web-modules/**/*.js`,
+	`!` + input + `win/web-modules/**/*.test.js`
+];
+
 function babel() {
 	return src(globs.babel)
 		.pipe(gulpBabel({plugins: [`@babel/plugin-transform-modules-commonjs`]}))
