@@ -1,5 +1,5 @@
 const
-	gulpBabel = require(`gulp-babel`),
+	gulpTypeScript = require(`gulp-typescript`),
 	gulpElm = require(`gulp-elm`),
 	gulpRename = require(`gulp-rename`),
 	{
@@ -14,16 +14,33 @@ const
 	globs = {};
 
 globs.copy = [input + `**`, ...[
-	`win/web-modules/**`,
+
+	// not copied
+
+	`node_modules/**`,
 	`**/*.elm`,
 	`win/elm-stuff/**`,
 	`win/src/**`,
 	`win/elm.json`,
 	`win/elm-git.json`,
+
 ].map(g => `!` + input + g)];
 
 function copy() {
 	return src(globs.copy)
+		.pipe(dest(output));
+}
+
+globs.ts = input + `**/*.ts`;
+function ts() {
+	return src(globs.ts)
+		.pipe(gulpTypeScript({
+			noFallthroughCasesInSwitch: true,
+			noImplicitReturns: true,
+			strict: true,
+			removeComments: true,
+			target: `es2020`,
+		}))
 		.pipe(dest(output));
 }
 
@@ -35,29 +52,17 @@ function elm() {
 		.pipe(dest(output + `win`));
 }
 
-globs.babel = [
-	input + `win/web-modules/**/*.js`,
-	`!` + input + `win/web-modules/**/*.test.js`
-];
-
-function babel() {
-	return src(globs.babel)
-		.pipe(gulpBabel({plugins: [`@babel/plugin-transform-modules-commonjs`]}))
-		.pipe(dest(output + `win/web-modules`));
-}
-
-const build =
-	parallel
-		( copy
-		, elm
-		, babel
-		);
+const build = parallel(
+	copy,
+	ts,
+	elm,
+);
 
 async function watchFiles() {
 	const cry = {usePolling: true};
 	watch(globs.copy, cry, copy);
+	watch(globs.ts, cry, ts);
 	watch(input + `win/src/**/*.elm`, cry, elm);
-	watch(globs.babel, babel);
 }
 
 exports.default = parallel(build, watchFiles);

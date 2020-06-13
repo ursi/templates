@@ -1,10 +1,10 @@
 npm i -D \
-@babel/core \
-@babel/preset-env \
+@types/node \
+typescript \
+gulp-typescript \
 electron \
 elm-debug-transformer \
 gulp \
-gulp-babel \
 gulp-elm \
 gulp-rename
 
